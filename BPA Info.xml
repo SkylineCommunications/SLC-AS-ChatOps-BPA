@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <DMSScript options="272" xmlns="http://www.skyline.be/automation">
 	<Name>BPA Info</Name>
-	<Description></Description>
+	<Description>Script that can be used to retrieve the last BPA results.</Description>
 	<Type>Automation</Type>
 	<Author>SKYLINE2\Joey</Author>
 	<CheckSets>FALSE</CheckSets>
