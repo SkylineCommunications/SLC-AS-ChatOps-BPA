@@ -274,7 +274,7 @@ namespace BPA_Info_1
 		{
 			var adaptiveCardBody = new List<AdaptiveElement>();
 
-			foreach (var result in bpaResults)
+			foreach (var result in bpaResults.OrderBy(r => r.Key))
 			{
 				var factSet = new AdaptiveFactSet
 				{
