@@ -79,7 +79,7 @@ namespace BPA_Info_1
 			var bpaResults = GetBpaResults();
 			//SendBpaResultsAsTable(engine, bpaResults);
 			//SendBpaResultsAsFactSets(engine, bpaResults);
-			SendBpaResultsAsCarousel(engine, bpaResults);
+			SendBpaResultsAsContainer(engine, bpaResults);
 		}
 
 		private Dictionary<string, ExecuteBpaResponse> GetBpaResults()
