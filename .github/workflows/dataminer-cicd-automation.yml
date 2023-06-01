@@ -5,8 +5,7 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches:
-      - main
-      - master
+      - DEV_ACA
     tags:
       - "[0-9]+.[0-9]+.[0-9]+.[0-9]+"
 
@@ -27,7 +26,7 @@ jobs:
       sonarCloudProjectName: SkylineCommunications_SLC-AS-ChatOps-BPA
     secrets:
       # The API-key: generated in the DCP Admin app (https://admin.dataminer.services/) as authentication for a certain DataMiner System.
-      api-key: ${{ secrets.DATAMINER_DEPLOY_KEY }}
+      api-key: ${{ secrets.DATAMINER_DEPLOY_KEY_2 }}
       sonarCloudToken: ${{ secrets.SONAR_TOKEN }}
     
   # # Optional 0 or More CD Jobs as needed
