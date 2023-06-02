@@ -15,3 +15,5 @@ More info about running BPA tests can be found in [DM Docs](https://docs.datamin
 ## BPA Info
 
 Automation script that returns the BPA results from the connected DataMiner system and returns them grouped by agent.
+
+![Response example](/Documentation/Result.png)

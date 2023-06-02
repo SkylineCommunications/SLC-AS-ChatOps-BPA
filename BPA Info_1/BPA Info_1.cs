@@ -52,7 +52,6 @@ dd/mm/2023	1.0.0.1		XXX, Skyline	Initial version
 namespace BPA_Info_1
 {
 	using System.Collections.Generic;
-	using System.ComponentModel;
 	using System.Linq;
 	using System.Text.RegularExpressions;
 	using AdaptiveCards;
@@ -61,7 +60,6 @@ namespace BPA_Info_1
 	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
 	using Skyline.DataMiner.Net.BPA;
 	using Skyline.DataMiner.Net.Messages;
-	using Skyline.DataMiner.Net.Messages.SLDataGateway;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -118,9 +116,10 @@ namespace BPA_Info_1
 
 			foreach (var bpaResultsForAgent in bpaResultsbyAgent.OrderBy(r => r.Key))
 			{
-				var agentInfoTextBlock = new AdaptiveTextBlock($"BPA results for {bpaResultsForAgent.Key}")
+				var agentInfoTextBlock = new AdaptiveTextBlock
 				{
 					Type = "TextBlock",
+					Text = "$\"BPA results for {bpaResultsForAgent.Key}\"",
 					Weight = AdaptiveTextWeight.Bolder,
 					Size = AdaptiveTextSize.Large,
 				};
@@ -140,10 +139,12 @@ namespace BPA_Info_1
 						},
 					};
 
-					var bpaResultsContainer = new AdaptiveContainer();
-					bpaResultsContainer.Style = TranslateOutcome(result.Value.Outcome);
-					bpaResultsContainer.Items.Add(bpaInfoFacts);
-
+					var bpaResultsContainer = new AdaptiveContainer
+					{
+						Type = "Container",
+						Style = TranslateOutcome(result.Value.Outcome),
+						Items = new List<AdaptiveElement> { bpaInfoFacts },
+					};
 					adaptiveCardBody.Add(bpaResultsContainer);
 				}
 			}
