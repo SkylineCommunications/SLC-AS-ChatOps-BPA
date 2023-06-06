@@ -51,15 +51,18 @@ dd/mm/2023	1.0.0.1		XXX, Skyline	Initial version
 
 namespace BPA_Info_1
 {
+	using System;
 	using System.Collections.Generic;
 	using System.Linq;
 	using System.Text.RegularExpressions;
 	using AdaptiveCards;
 	using Newtonsoft.Json;
 	using Skyline.DataMiner.Automation;
-	using Skyline.DataMiner.Core.DataMinerSystem.Automation;
+	//using Skyline.DataMiner.Core.DataMinerSystem.Automation;
+	//using Skyline.DataMiner.Core.DataMinerSystem.Common;
 	using Skyline.DataMiner.Net.BPA;
 	using Skyline.DataMiner.Net.Messages;
+	using Skyline.DataMiner.Net.Messages.SLDataGateway;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -82,17 +85,18 @@ namespace BPA_Info_1
 			var helper = new BpaManagerHelper(Engine.SLNetRaw);
 			var bpas = helper.BPAs.ReadAll();
 
-			var dms = engine.GetDms();
-			var agents = dms.GetAgents();
+			/*var dms = engine.GetDms();
+			var agents = dms.GetAgents();*/
+			var agents = GetAgents(engine);
 
 			var bpaResultsByAgent = new Dictionary<string, Dictionary<string, ExecuteBpaResponse>>();
 
-			var executeBpasResponse = helper.BPAs.GetLastResults(helper.BPAs.ReadAll(), agents.Select(a => new DestinationAgent(a.Id)).ToArray());
+			var executeBpasResponse = helper.BPAs.GetLastResults(helper.BPAs.ReadAll(), agents.Select(a => new DestinationAgent(a.Key)).ToArray());
 			foreach (var response in executeBpasResponse.Responses)
 			{
 				var dmaId = response.SourceDmaId;
-				var dmaName = agents.FirstOrDefault(a => a.Id == dmaId)?.Name;
-				if (dmaName == null)
+				//var dmaName = agents.FirstOrDefault(a => a.Id == dmaId)?.Name;
+				if (!agents.TryGetValue(dmaId, out var dmaName))
 				{
 					continue;
 				}
@@ -110,16 +114,40 @@ namespace BPA_Info_1
 			return bpaResultsByAgent;
 		}
 
-		private void SendBpaResults(IEngine engine, Dictionary<string, Dictionary<string, ExecuteBpaResponse>> bpaResultsbyAgent)
+		private Dictionary<int, string> GetAgents(IEngine engine)
+		{
+			var agents = new Dictionary<int, string>();
+
+			GetInfoMessage message = new GetInfoMessage
+			{
+				Type = InfoType.DataMinerInfo,
+			};
+
+			DMSMessage[] responses = engine.SendSLNetMessage(message);
+			foreach (DMSMessage response in responses)
+			{
+				GetDataMinerInfoResponseMessage info = (GetDataMinerInfoResponseMessage)response;
+
+				if (info.ID > 0)
+				{
+					agents.Add(info.ID, info.Name);
+				}
+			}
+
+			return agents;
+		}
+
+		private void SendBpaResults(IEngine engine, Dictionary<string, Dictionary<string, ExecuteBpaResponse>> bpaResultsByAgent)
 		{
 			var adaptiveCardBody = new List<AdaptiveElement>();
 
-			foreach (var bpaResultsForAgent in bpaResultsbyAgent.OrderBy(r => r.Key))
+			foreach (var bpaResultsForAgent in bpaResultsByAgent.OrderBy(r => r.Key))
 			{
+				engine.Log("AGENT: " + bpaResultsForAgent.Key);
 				var agentInfoTextBlock = new AdaptiveTextBlock
 				{
 					Type = "TextBlock",
-					Text = "$\"BPA results for {bpaResultsForAgent.Key}\"",
+					Text = $"BPA results for {bpaResultsForAgent.Key}",
 					Weight = AdaptiveTextWeight.Bolder,
 					Size = AdaptiveTextSize.Large,
 				};
@@ -127,6 +155,10 @@ namespace BPA_Info_1
 
 				foreach (var result in bpaResultsForAgent.Value.OrderBy(r => r.Key))
 				{
+					engine.Log("NAME: " + result.Key);
+					engine.Log("STATUS: " + Regex.Replace(result.Value.Outcome.ToString(), @"([a-z])([A-Z])", "$1 $2"));
+					engine.Log("MESSAGE: " + result.Value.Message);
+					engine.Log("EXECUTED: " + result.Value.Timestamp.ToString());
 					var bpaInfoFacts = new AdaptiveFactSet
 					{
 						Type = "FactSet",
@@ -146,10 +178,21 @@ namespace BPA_Info_1
 						Items = new List<AdaptiveElement> { bpaInfoFacts },
 					};
 					adaptiveCardBody.Add(bpaResultsContainer);
+					engine.Log("CONTAINER ADDED");
 				}
 			}
 
-			var adaptiveCard = JsonConvert.SerializeObject(adaptiveCardBody);
+			engine.Log("SERIALIZING");
+			string adaptiveCard = String.Empty;
+			try
+			{
+				adaptiveCard = JsonConvert.SerializeObject(adaptiveCardBody);
+				engine.Log("SERIALIZED: " + adaptiveCard);
+			}
+			catch (Exception e)
+			{
+				engine.Log("FAILED: " + e.ToString());
+			}
 			engine.AddScriptOutput("AdaptiveCard", adaptiveCard);
 		}
 
