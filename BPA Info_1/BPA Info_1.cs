@@ -51,7 +51,6 @@ dd/mm/2023	1.0.0.1		XXX, Skyline	Initial version
 
 namespace BPA_Info_1
 {
-	using System;
 	using System.Collections.Generic;
 	using System.Linq;
 	using System.Text.RegularExpressions;
@@ -62,7 +61,6 @@ namespace BPA_Info_1
 	//using Skyline.DataMiner.Core.DataMinerSystem.Common;
 	using Skyline.DataMiner.Net.BPA;
 	using Skyline.DataMiner.Net.Messages;
-	using Skyline.DataMiner.Net.Messages.SLDataGateway;
 
 	/// <summary>
 	/// Represents a DataMiner Automation script.
@@ -143,7 +141,6 @@ namespace BPA_Info_1
 
 			foreach (var bpaResultsForAgent in bpaResultsByAgent.OrderBy(r => r.Key))
 			{
-				engine.Log("AGENT: " + bpaResultsForAgent.Key);
 				var agentInfoTextBlock = new AdaptiveTextBlock
 				{
 					Type = "TextBlock",
@@ -155,10 +152,6 @@ namespace BPA_Info_1
 
 				foreach (var result in bpaResultsForAgent.Value.OrderBy(r => r.Key))
 				{
-					engine.Log("NAME: " + result.Key);
-					engine.Log("STATUS: " + Regex.Replace(result.Value.Outcome.ToString(), @"([a-z])([A-Z])", "$1 $2"));
-					engine.Log("MESSAGE: " + result.Value.Message);
-					engine.Log("EXECUTED: " + result.Value.Timestamp.ToString());
 					var bpaInfoFacts = new AdaptiveFactSet
 					{
 						Type = "FactSet",
@@ -178,21 +171,10 @@ namespace BPA_Info_1
 						Items = new List<AdaptiveElement> { bpaInfoFacts },
 					};
 					adaptiveCardBody.Add(bpaResultsContainer);
-					engine.Log("CONTAINER ADDED");
 				}
 			}
 
-			engine.Log("SERIALIZING");
-			string adaptiveCard = String.Empty;
-			try
-			{
-				adaptiveCard = JsonConvert.SerializeObject(adaptiveCardBody);
-				engine.Log("SERIALIZED: " + adaptiveCard);
-			}
-			catch (Exception e)
-			{
-				engine.Log("FAILED: " + e.ToString());
-			}
+			var adaptiveCard = JsonConvert.SerializeObject(adaptiveCardBody);
 			engine.AddScriptOutput("AdaptiveCard", adaptiveCard);
 		}
 
